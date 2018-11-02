@@ -51,11 +51,11 @@ set +e
 #
 # UART mapping on NXPhlitev3:
 #
-# LPUART0		/dev/ttyS0		P16 CONSOLE
-# UART0			/dev/ttyS1		P7  IR
-# UART1			/dev/ttyS2		P14-3, P15-2 RC input
-# UART2			/dev/ttyS3		P3 GPS
-# UART4			/dev/ttyS3		P10 TELEM1 (flow control)
+# LPUART0               /dev/ttyS0              P16 CONSOLE
+# UART0                 /dev/ttyS1              P7  IR
+# UART1                 /dev/ttyS2              P14-3, P15-2 RC input
+# UART2                 /dev/ttyS3              P3 GPS
+# UART4                 /dev/ttyS3              P10 TELEM1 (flow control)
 
 #
 # Set default paramter values.
@@ -123,6 +123,9 @@ uorb start
 #
 tone_alarm start
 
+# Play the startup tune.
+tune_control play -m MNT150<fga+7>c3
+
 #
 # Try to mount the microSD card.
 #
@@ -138,12 +141,12 @@ then
 			hardfault_log reset
 		fi
 	else
-		# Play the startup tune.
-		tune_control play -t 1
+		# # Play the startup tune.
+		# tune_control play -m MNT150<fga+7>c3
 	fi
 else
 	# tune SD_INIT
-	tune_control play -t 16
+	# tune_control play -t 16
 	if mkfatfs /dev/mmcsd0
 	then
 		if mount -t vfat /dev/mmcsd0 /fs/microsd
@@ -166,7 +169,7 @@ then
 	if [ $LOG_FILE = /dev/null ]
 	then
 		# tune Make FS MBAGP
-		tune_control play -t 2
+		# tune_control play -t 2
 	fi
 fi
 
@@ -249,12 +252,19 @@ else
 	rgbled_pwm start
 
 	#
+	# Enforce the default airframe as a Teal One.
+	#
+	echo "Enforcing Teal One airframe and parameter defaults."
+	param set SYS_AUTOSTART 4250
+	param set SYS_AUTOCONFIG 1
+
+	#
 	# Set AUTOCNF flag to use it in AUTOSTART scripts.
 	#
 	if param compare SYS_AUTOCONFIG 1
 	then
-		# Wipe out params except RC*, flight modes and total flight time.
-		param reset_nostart RC* COM_FLTMODE* LND_FLIGHT_T_* TC_* CAL_ACC* CAL_GYRO*
+		# Wipe out params except RC*, flight modes and total flight time. Also calibration stuff and mag bias learning.
+		param reset_nostart RC* COM_FLTMODE* LND_FLIGHT_T_* TC_* CAL_ACC* CAL_GYRO* CAL_MAG* SENS_BOARD* EKF2_MAGBIAS*
 		set AUTOCNF yes
 	else
 		set AUTOCNF no
@@ -518,7 +528,8 @@ else
 		# Run FrSky Telemetry on Pixracer on the FrSky port if not enabled already
 		if param compare TEL_FRSKY_CONFIG 0
 		then
-			frsky_telemetry start -d /dev/ttyS6 -t 15
+			# Do not start. We use PGA460 on this port.
+			# frsky_telemetry start -d /dev/ttyS6 -t 15
 		fi
 	fi
 

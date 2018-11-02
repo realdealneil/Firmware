@@ -976,7 +976,8 @@ void battery_failsafe(orb_advert_t *mavlink_log_pub, const vehicle_status_s &sta
 		case LOW_BAT_ACTION::RETURN_OR_LAND:
 
 			// let us send the critical message even if already in RTL
-			if (TRANSITION_DENIED != main_state_transition(status, commander_state_s::MAIN_STATE_AUTO_RTL, status_flags, internal_state)) {
+			if (status.rc_signal_lost &&
+			    TRANSITION_DENIED != main_state_transition(status, commander_state_s::MAIN_STATE_AUTO_RTL, status_flags, internal_state)) {
 				mavlink_log_critical(mavlink_log_pub, "%s, RETURNING", battery_critical);
 
 			} else {
@@ -986,7 +987,8 @@ void battery_failsafe(orb_advert_t *mavlink_log_pub, const vehicle_status_s &sta
 			break;
 
 		case LOW_BAT_ACTION::LAND:
-			if (TRANSITION_DENIED != main_state_transition(status, commander_state_s::MAIN_STATE_AUTO_LAND, status_flags, internal_state)) {
+			if (status.rc_signal_lost &&
+			    TRANSITION_DENIED != main_state_transition(status, commander_state_s::MAIN_STATE_AUTO_LAND, status_flags, internal_state)) {
 				mavlink_log_critical(mavlink_log_pub, "%s, LANDING AT CURRENT POSITION", battery_critical);
 
 			} else {
